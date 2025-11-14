@@ -15,13 +15,18 @@ def convert_to_str(obj):
         return mystr
     elif type(obj) in [str, int, float]:
         return str(obj)
+    
+# Clean title
+def safe_filename(title: str) -> Path: 
+    clean = re.sub(r'[\\/:*?"<>|]+',"_", title).strip() 
+    return Path(f"{clean}.txt")
 
 # NEW: single shared download/save function (removes duplicate logic)
 def dl_and_save(item):
     page = wikipedia.page(item, auto_suggest=False)
     title = page.title
     references = convert_to_str(page.references)
-    out_filename = title + ".txt"
+    out_filename = safe_filename(title)
     print(f'writing to {out_filename}')
     with open(out_filename, 'w') as fileobj:
         fileobj.write(references)
@@ -43,6 +48,9 @@ def wiki_sequentially(results):
     print('\nsequential function:')
     t_start = time.perf_counter()
 
+    # Limit to first 10 results
+    results = results[:10]
+
     for item in results:
         dl_and_save(item)
 
@@ -54,6 +62,9 @@ def wiki_sequentially(results):
 def concurrent_threads(results):
     print('\nthread pool function:')
     t_start = time.perf_counter()
+
+    # Limit to first 10 results
+    results = results[:10]
 
     with ThreadPoolExecutor() as executor:
         executor.map(dl_and_save, results)
@@ -68,6 +79,9 @@ def concurrent_threads(results):
 def concurrent_process(results):
     print('\nprocess pool function:')
     t_start = time.perf_counter()
+
+    # Limit to first 10 results
+    results = results[:10]
 
     with ProcessPoolExecutor() as executor:
         executor.map(dl_and_save, results)
